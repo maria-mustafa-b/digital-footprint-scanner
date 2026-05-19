@@ -1,14 +1,38 @@
-from fastapi import FastAPI
-from backend.scanners.username_scanner import scan_username
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from sherlock_runner import run_sherlock
 
 app = FastAPI(title="Digital Footprint Scanner")
 
-@app.get("/")
-def home():
-    return {"message": "DFS API running"}
+# Allow the React frontend (localhost:5173) to call this API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/scan/{username}")
-def scan(username: str):
-    result = scan_username(username)
-    return result
-    
+class ScanRequest(BaseModel):
+    username: str
+
+class ScanResult(BaseModel):
+    platform: str
+    url: str
+    status: str
+
+@app.get("/")
+def health_check():
+    return {"status": "ok"}
+
+@app.post("/api/scan", response_model=list[ScanResult])
+async def scan_username(request: ScanRequest):
+    username = request.username.strip()
+
+    if not username or len(username) < 2:
+        raise HTTPException(status_code=400, detail="Username too short")
+    if len(username) > 50:
+        raise HTTPException(status_code=400, detail="Username too long")
+
+    results = await run_sherlock(username)
+    return results
