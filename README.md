@@ -1,4 +1,4 @@
-<div align="center"> 🔍 Digital Footprint Scanner
+<div align="center"> **Digital Footprint Scanner**
  
 **An open-source OSINT tool that builds a full digital identity report from a username or email address.**
  
