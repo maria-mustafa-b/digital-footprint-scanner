@@ -11,3 +11,4 @@ def home():
 def scan(username: str):
     result = scan_username(username)
     return result
+    
